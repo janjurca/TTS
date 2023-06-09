@@ -37,7 +37,7 @@ from TTS.utils.io import load_fsspec
 from TTS.utils.samplers import BucketBatchSampler
 from TTS.vocoder.models.hifigan_generator import HifiganGenerator
 from TTS.vocoder.utils.generic_utils import plot_results
-
+from TTS.config.shared_configs import BaseAudioConfig
 ##############################
 # IO / Feature extraction
 ##############################
@@ -214,7 +214,7 @@ def wav_to_mel(y, n_fft, num_mels, sample_rate, hop_length, win_length, fmin, fm
 
 
 @dataclass
-class VitsAudioConfig(Coqpit):
+class VitsAudioConfig(BaseAudioConfig):
     fft_size: int = 1024
     sample_rate: int = 22050
     win_length: int = 1024
@@ -263,7 +263,7 @@ class VitsDataset(TTSDataset):
         item = self.samples[idx]
         raw_text = item["text"]
 
-        wav, _ = load_audio(item["audio_file"])
+        wav = torch.tensor(self.load_wav(item["audio_file"]), dtype=torch.float32).unsqueeze(0)
         if self.model_args.encoder_sample_rate is not None:
             if wav.size(1) % self.model_args.encoder_sample_rate != 0:
                 wav = wav[:, : -int(wav.size(1) % self.model_args.encoder_sample_rate)]
@@ -1607,6 +1607,7 @@ class Vits(BaseTTS):
                 precompute_num_workers=config.precompute_num_workers,
                 verbose=verbose,
                 tokenizer=self.tokenizer,
+                ap=self.ap,
                 start_by_longest=config.start_by_longest,
             )
 
