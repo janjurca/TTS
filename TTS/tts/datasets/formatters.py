@@ -7,7 +7,8 @@ from typing import List
 
 import pandas as pd
 from tqdm import tqdm
-
+import json 
+import os
 ########################
 # DATASETS
 ########################
@@ -50,6 +51,27 @@ def coqui(root_path, meta_file, ignored_speakers=None):
         print(f" | > [!] {not_found_counter} files not found")
     return items
 
+def my_dataset(root_path,meta_file, ignored_speakers=None):
+    items = []
+    if not meta_file:
+        meta_file = f"{root_path}/metadata.json"
+    with open(meta_file) as fr:
+        metadata = json.load(fr)
+
+    for item in tqdm(metadata):
+        if any(sub in item["text"] for sub in ['\xad', '<C5><84>', '<C5><91>', '<C5><9B>', '<C5><9F>',  '<C5><A3>', '<C4><AB>', '<C4><BA>', '<C4><9F>', '<C4><97>', '<C4><81>', '<C4><83>', "\\", "]", "[", "<C2><A7>", "&", "(", ")", "+", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "=", "@"]):
+            continue
+
+        if len(item["text"]) > 10 and len(item["text"]) < 250:
+            items.append(
+                    {
+                        "text": item["text"], 
+                        "audio_file": os.path.join(root_path, item["file"]), 
+                        "speaker_name": "VCTK_" + item["file"].split("/")[1], 
+                        "root_path": root_path}
+                )
+
+    return items
 
 def tweb(root_path, meta_file, **kwargs):  # pylint: disable=unused-argument
     """Normalize TWEB dataset.
