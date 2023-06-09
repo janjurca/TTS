@@ -295,7 +295,10 @@ class TTSDataset(Dataset):
     def _compute_lengths(samples):
         new_samples = []
         for item in samples:
-            audio_length = os.path.getsize(item["audio_file"]) / 16 * 8  # assuming 16bit audio
+            if "duration" in item:
+                audio_length = item["duration"]
+            else:
+                audio_length = os.path.getsize(item["audio_file"]) / 16 * 8  # assuming 16bit audio
             text_lenght = len(item["text"])
             item["audio_length"] = audio_length
             item["text_length"] = text_lenght
